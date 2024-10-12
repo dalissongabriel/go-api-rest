@@ -39,3 +39,71 @@ func FindOneCelebrity(w http.ResponseWriter, r *http.Request) {
 
 	}
 }
+
+func CreateCelebrity(w http.ResponseWriter, r *http.Request) {
+	var newCelebrity models.Celebrity
+	json.NewDecoder(r.Body).Decode(&newCelebrity)
+	database.DB.Create(&newCelebrity)
+	json.NewEncoder(w).Encode(newCelebrity)
+}
+
+func UpdateCelebrity(w http.ResponseWriter, r *http.Request) {
+	var celebrityFromBodyRequest models.Celebrity
+	json.NewDecoder(r.Body).Decode(&celebrityFromBodyRequest)
+
+	var foundCelebrity *models.Celebrity
+	resultCelebrityFirst := database.DB.First(&foundCelebrity, celebrityFromBodyRequest.Id)
+
+	if resultCelebrityFirst.Error != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string](string){
+			"message": "data not found",
+		})
+		return
+	}
+
+	resultSave := database.DB.Save(&celebrityFromBodyRequest)
+
+	if resultSave.Error != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string](string){
+			"message": "failed to updated",
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(celebrityFromBodyRequest)
+
+}
+
+func DeleteCelebrity(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["celebrity_id"]
+
+	result := database.DB.Delete(models.Celebrity{}, id)
+	fmt.Println(result.RowsAffected)
+
+	if result.Error != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string](string){
+			"message": "bad request",
+		})
+
+		return
+
+	}
+
+	if result.RowsAffected == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string](string){
+			"message": "data not found",
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string](string){
+		"message": "deleted with success",
+	})
+}

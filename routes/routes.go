@@ -6,6 +6,7 @@ import (
 
 	"github.com/dalissongabriel/go-api-rest/controllers"
 	"github.com/dalissongabriel/go-api-rest/middlewares"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -24,5 +25,5 @@ func HandleRequest() {
 
 	http.Handle("/", r)
 
-	log.Fatal(http.ListenAndServe(":3001", nil))
+	log.Fatal(http.ListenAndServe(":3001", handlers.CORS(handlers.AllowedOrigins([]string{"*"}))(r)))
 }
